@@ -1,0 +1,74 @@
+javascript:(function(){
+    if(document.getElementById('troy-tab-recorder')) return;
+
+    let ui = document.createElement('div');
+    ui.id = 'troy-tab-recorder';
+    ui.style.cssText = 'position:fixed;top:15px;left:15px;z-index:999999;background:#13131a;border:1px solid #00ffcc;padding:12px;border-radius:10px;direction:rtl;font-family:sans-serif;box-shadow:0 5px 15px rgba(0,0,0,0.7);width:160px;color:#fff;';
+    ui.innerHTML = `
+        <div style="color:#00ffcc;font-size:11px;margin-bottom:8px;font-weight:bold;text-align:center;">🎥 مسجل التاب النظيف</div>
+        <button id="troy-start-btn" style="width:100%;background:#00b894;color:#fff;padding:8px;border:none;border-radius:6px;font-size:11px;font-weight:bold;cursor:pointer;margin-bottom:5px;">بدء التسجيل</button>
+        <button id="troy-stop-btn" style="width:100%;background:#d63031;color:#fff;padding:8px;border:none;border-radius:6px;font-size:11px;font-weight:bold;cursor:pointer;display:none;">إيقاف وحفظ</button>
+        <div id="troy-status" style="font-size:9px;color:#a3a3c2;text-align:center;margin-top:4px;">جاهز للتسجيل</div>
+    `;
+    document.body.appendChild(ui);
+
+    let mediaRecorder;
+    let chunks = [];
+
+    document.getElementById('troy-start-btn').onclick = async function() {
+        try {
+            // طلب تسجيل علامة التبويب (Tab) لضمان استبعاد كيبورد الجوال وأي قوائم نظام خارجية
+            const stream = await navigator.mediaDevices.getDisplayMedia({
+                video: { displaySurface: "browser" },
+                audio: false
+            });
+
+            document.getElementById('troy-start-btn').style.display = 'none';
+            document.getElementById('troy-stop-btn').style.display = 'block';
+            document.getElementById('troy-status').innerText = '🔴 يتم التسجيل...';
+            document.getElementById('troy-status').style.color = '#ff4d4d';
+
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+            chunks = [];
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) chunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(chunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Clean_Tab_Recording.webm';
+                a.click();
+                URL.revokeObjectURL(url);
+
+                document.getElementById('troy-status').innerText = 'تم الحفظ بنجاح ✔️';
+                document.getElementById('troy-status').style.color = '#00ffcc';
+                document.getElementById('troy-start-btn').style.display = 'block';
+                document.getElementById('troy-stop-btn').style.display = 'none';
+            };
+
+            mediaRecorder.start();
+
+            // إيقاف التسجيل تلقائياً إذا الضغط على زر "إيقاف المشاركة" في المتصفح
+            stream.getVideoTracks()[0].onended = () => {
+                if(mediaRecorder && mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                }
+            };
+
+        } catch (err) {
+            console.error(err);
+            document.getElementById('troy-status').innerText = 'تم إلغاء التسجيل';
+        }
+    };
+
+    document.getElementById('troy-stop-btn').onclick = function() {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+            mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        }
+    };
+})();
