@@ -1,0 +1,48 @@
+javascript:(function(){
+    let framedFlag = document.body.dataset.framed === "true";
+    
+    let troyBtnContainer = document.getElementById('typer-toggle-container-troy');
+    let amBtnContainer = document.getElementById('typer-toggle-container-am');
+    let mainUi = document.getElementById('auto-typer-ui');
+
+    if(framedFlag) {
+        // إرجاع الشاشة لوضعها الطبيعي
+        document.body.style.transform = '';
+        document.body.style.transformOrigin = '';
+        document.body.style.padding = '';
+        document.body.style.boxShadow = '';
+        document.body.style.background = '';
+        document.body.style.borderRadius = '';
+        document.body.style.marginTop = '';
+        document.body.style.marginBottom = '';
+        document.documentElement.style.background = '';
+        document.body.dataset.framed = "false";
+
+        // إعادة العناصر لمكانها الأصلي
+        if(troyBtnContainer) document.body.appendChild(troyBtnContainer);
+        if(amBtnContainer) document.body.appendChild(amBtnContainer);
+        if(mainUi) document.body.appendChild(mainUi);
+        return;
+    }
+    
+    document.body.dataset.framed = "true";
+    
+    // سحب الأزرار والقوائم برى نطاق تصغير الشاشة عشان تبقى ثابتة في زوايا الشاشة الحقيقية
+    if(troyBtnContainer) document.documentElement.appendChild(troyBtnContainer);
+    if(amBtnContainer) document.documentElement.appendChild(amBtnContainer);
+    if(mainUi) document.documentElement.appendChild(mainUi);
+
+    // خلفية الجوال الخارجية
+    document.documentElement.style.background = '#13131a';
+    
+    // تصغير الشاشة أكثر ونزلها لتحت بمسافة ممتازة
+    document.body.style.transform = 'scale(0.70)';
+    document.body.style.transformOrigin = 'top center';
+    document.body.style.padding = '15px';
+    document.body.style.background = '#ffffff';
+    document.body.style.boxShadow = '0 30px 70px rgba(0,0,0,0.8)';
+    document.body.style.borderRadius = '18px';
+    document.body.style.boxSizing = 'border-box';
+    document.body.style.marginTop = '90px';
+    document.body.style.marginBottom = '90px';
+})();
