@@ -1,0 +1,119 @@
+javascript:(function(){
+    if(document.getElementById('troy-clean-recorder')) return;
+
+    // 1. تحميل مكتبة html2canvas
+    let script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    document.head.appendChild(script);
+
+    // 2. تصميم الواجهة المصغرة للتحكم بالتسجيل (تكون فوق بعيدة عن الشات)
+    let ui = document.createElement('div');
+    ui.id = 'troy-clean-recorder';
+    ui.style.cssText = 'position:fixed;top:10px;left:10px;z-index:999999;background:#1a1a24;padding:10px;border-radius:8px;border:1px solid #e84393;direction:rtl;font-family:sans-serif;box-shadow:0 4px 10px rgba(0,0,0,0.5);width:150px;';
+    ui.innerHTML = `
+        <div style="color:#e84393;font-size:11px;margin-bottom:8px;font-weight:bold;text-align:center;">🎥 مسجل الشات النظيف</div>
+        <button id="btn-start-rec" style="width:100%;background:#27ae60;color:#fff;padding:8px;border:none;border-radius:4px;font-size:11px;font-weight:bold;cursor:pointer;margin-bottom:5px;">بدء التسجيل</button>
+        <button id="btn-stop-rec" style="width:100%;background:#c0392b;color:#fff;padding:8px;border:none;border-radius:4px;font-size:11px;font-weight:bold;cursor:pointer;display:none;">إيقاف وحفظ الفديو</button>
+        <div id="rec-status" style="font-size:10px;color:#a3a3c2;text-align:center;margin-top:5px;">جاري تحميل المكتبة...</div>
+    `;
+    document.body.appendChild(ui);
+
+    // 3. إنشاء "شاشة الشات النظيفة" المعزولة (أسفل الشاشة)
+    let cleanChat = document.createElement('div');
+    cleanChat.id = 'clean-chat-box';
+    cleanChat.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);width:90%;max-width:350px;height:250px;background:#f5f6fa;border:2px solid #2c3e50;border-radius:12px;overflow-y:auto;z-index:999998;padding:10px;direction:rtl;box-shadow:0 10px 20px rgba(0,0,0,0.5);';
+    document.body.appendChild(cleanChat);
+
+    // 4. مراقبة الشات الأصلي ونقل الرسايل للشاشة النظيفة
+    let originalChat = document.querySelector("#d2"); 
+    if(originalChat) {
+        let cloneContent = () => {
+            cleanChat.innerHTML = originalChat.innerHTML;
+            cleanChat.scrollTop = cleanChat.scrollHeight; // التمرير التلقائي للأسفل
+        };
+        cloneContent(); 
+        
+        let chatObserver = new MutationObserver(() => {
+            cloneContent();
+        });
+        chatObserver.observe(originalChat, {childList: true, subtree: true});
+    } else {
+        cleanChat.innerHTML = '<div style="text-align:center;color:red;padding:20px;font-weight:bold;">لم يتم العثور على صندوق المحادثة #d2!</div>';
+    }
+
+    // 5. منطق التسجيل باستخدام المكتبة
+    let recorder, stream, canvas, ctx;
+    let chunks = [];
+    let isRecording = false;
+
+    script.onload = () => {
+        document.getElementById('rec-status').innerText = 'جاهز للتسجيل!';
+        document.getElementById('rec-status').style.color = '#00ffcc';
+
+        document.getElementById('btn-start-rec').onclick = () => {
+            document.getElementById('btn-start-rec').style.display = 'none';
+            document.getElementById('btn-stop-rec').style.display = 'block';
+            document.getElementById('rec-status').innerText = '🔴 جاري التسجيل...';
+            document.getElementById('rec-status').style.color = '#e74c3c';
+
+            isRecording = true;
+
+            // تجهيز لوحة الرسم (Canvas) بنفس مقاس الشاشة النظيفة
+            canvas = document.createElement('canvas');
+            canvas.width = cleanChat.offsetWidth;
+            canvas.height = cleanChat.offsetHeight;
+            ctx = canvas.getContext('2d');
+            
+            // سحب البيانات من الكانفاس لتكوين فيديو
+            stream = canvas.captureStream(10); 
+            recorder = new MediaRecorder(stream, {mimeType: 'video/webm'});
+
+            recorder.ondataavailable = e => {
+                if (e.data.size > 0) chunks.push(e.data);
+            };
+
+            recorder.onstop = () => {
+                let blob = new Blob(chunks, {type: 'video/webm'});
+                let url = URL.createObjectURL(blob);
+                let a = document.createElement('a');
+                a.href = url;
+                a.download = 'Clean_Chat_Record.webm';
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                chunks = [];
+                document.getElementById('rec-status').innerText = 'تم الحفظ ✔️';
+                document.getElementById('rec-status').style.color = '#2ecc71';
+            };
+
+            recorder.start();
+
+            // دالة دائرية لالتقاط الشاشة برمجياً 
+            const captureFrame = async () => {
+                if (!isRecording) return;
+                try {
+                    let h2cCanvas = await html2canvas(cleanChat, {
+                        logging: false,
+                        useCORS: true,
+                        scale: 1, // جودة عادية لمنع التعليق
+                        backgroundColor: '#f5f6fa'
+                    });
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(h2cCanvas, 0, 0);
+                } catch(err) {}
+                
+                // انتظار 100 ملي ثانية قبل التقاط الفريم التالي
+                setTimeout(captureFrame, 100); 
+            };
+            
+            captureFrame(); // بدء التصوير
+        };
+
+        document.getElementById('btn-stop-rec').onclick = () => {
+            isRecording = false;
+            recorder.stop();
+            document.getElementById('btn-start-rec').style.display = 'block';
+            document.getElementById('btn-stop-rec').style.display = 'none';
+        };
+    };
+})();
