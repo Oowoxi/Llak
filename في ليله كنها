@@ -1,0 +1,126 @@
+javascript:(function(){
+    let active = document.body.dataset.mobileFramed === "true";
+    
+    let mainUi = document.getElementById('auto-typer-ui');
+    let troyBtn = document.getElementById('typer-toggle-container-troy');
+    let amBtn = document.getElementById('typer-toggle-container-am');
+    let controlPanel = document.getElementById('troy-mobile-control-panel');
+
+    if (active) {
+        // إرجاع كل شيء لوضعه الطبيعي
+        document.body.style.transform = '';
+        document.body.style.transformOrigin = '';
+        document.body.style.padding = '';
+        document.body.style.background = '';
+        document.body.style.boxShadow = '';
+        document.body.style.borderRadius = '';
+        document.body.style.marginTop = '';
+        document.body.style.marginBottom = '';
+        document.body.style.width = '';
+        document.body.style.maxWidth = '';
+        document.body.style.marginLeft = '';
+        document.documentElement.style.background = '';
+        document.body.dataset.mobileFramed = "false";
+        
+        // إعادة القوائم لمكانها داخل الجسم الأساسي
+        if(mainUi) document.body.appendChild(mainUi);
+        if(troyBtn) document.body.appendChild(troyBtn);
+        if(amBtn) document.body.appendChild(amBtn);
+        if(controlPanel) controlPanel.remove();
+        return;
+    }
+    
+    document.body.dataset.mobileFramed = "true";
+    
+    // سحب قوائم السكربت وإخراجها برى الإطار الأبيض (إلى جذر الصفحة مباشرة)
+    if(mainUi) document.documentElement.appendChild(mainUi);
+    if(troyBtn) document.documentElement.appendChild(troyBtn);
+    if(amBtn) document.documentElement.appendChild(amBtn);
+
+    // خلفية داكنة للمنطقة الخارجية المحيطة بالإطار
+    document.documentElement.style.background = '#0b0b0f';
+    
+    // إطار الجوال الأبيض في المنتصف (بوضع الجوال الطبيعي وبدون تأثير كمبيوتر)
+    document.body.style.background = '#ffffff';
+    document.body.style.boxShadow = '0 30px 80px rgba(0,0,0,0.8)';
+    document.body.style.borderRadius = '24px';
+    document.body.style.overflow = 'hidden';
+    document.body.style.boxSizing = 'border-box';
+    
+    let currentScale = 0.75;
+    let currentTop = 20;
+    
+    function updateTransform() {
+        document.body.style.transform = `scale(${currentScale})`;
+        document.body.style.transformOrigin = 'top center';
+        document.body.style.marginTop = `${currentTop}px`;
+        document.body.style.width = '100%';
+        document.body.style.maxWidth = '450px';
+        document.body.style.marginLeft = 'calc(50% - 225px)';
+    }
+    updateTransform();
+    
+    // شريط التحكم السفلي العائم (خارج الإطار الأبيض)
+    let panel = document.createElement('div');
+    panel.id = 'troy-mobile-control-panel';
+    panel.style.cssText = 'position:fixed;bottom:15px;left:50%;transform:translateX(-50%);z-index:999999;background:rgba(20,20,30,0.95);backdrop-filter:blur(10px);border:1px solid rgba(0,255,204,0.4);padding:8px 14px;border-radius:30px;display:flex;gap:8px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,0.7);direction:rtl;';
+    panel.innerHTML = `
+        <span style="color:#00ffcc;font-size:11px;font-weight:bold;font-family:sans-serif;">🎛️ التحكم:</span>
+        <button id="btn-scale-down" style="background:#2c2c3e;color:#fff;border:none;width:30px;height:30px;border-radius:50%;font-weight:bold;cursor:pointer;font-size:14px;">-</button>
+        <span id="scale-val" style="color:#fff;font-size:11px;font-family:sans-serif;min-width:35px;text-align:center;">75%</span>
+        <button id="btn-scale-up" style="background:#2c2c3e;color:#fff;border:none;width:30px;height:30px;border-radius:50%;font-weight:bold;cursor:pointer;font-size:14px;">+</button>
+        <div style="width:1px;height:18px;background:rgba(255,255,255,0.2);margin:0 2px;"></div>
+        <button id="btn-move-up" style="background:#2c2c3e;color:#fff;border:none;width:30px;height:30px;border-radius:50%;font-weight:bold;cursor:pointer;font-size:12px;" title="رفع">⬆️</button>
+        <button id="btn-move-down" style="background:#2c2c3e;color:#fff;border:none;width:30px;height:30px;border-radius:50%;font-weight:bold;cursor:pointer;font-size:12px;" title="نزول">⬇️</button>
+        <div style="width:1px;height:18px;background:rgba(255,255,255,0.2);margin:0 2px;"></div>
+        <button id="btn-close-frame" style="background:#e74c3c;color:#fff;border:none;padding:5px 10px;border-radius:12px;font-weight:bold;cursor:pointer;font-size:11px;font-family:sans-serif;">إلغاء</button>
+    `;
+    document.documentElement.appendChild(panel);
+    
+    document.getElementById('btn-scale-up').onclick = () => {
+        if(currentScale < 0.95) {
+            currentScale = Math.round((currentScale + 0.03) * 100) / 100;
+            updateTransform();
+            document.getElementById('scale-val').innerText = Math.round(currentScale * 100) + '%';
+        }
+    };
+    
+    document.getElementById('btn-scale-down').onclick = () => {
+        if(currentScale > 0.4) {
+            currentScale = Math.round((currentScale - 0.03) * 100) / 100;
+            updateTransform();
+            document.getElementById('scale-val').innerText = Math.round(currentScale * 100) + '%';
+        }
+    };
+    
+    document.getElementById('btn-move-up').onclick = () => {
+        currentTop = Math.max(0, currentTop - 15);
+        updateTransform();
+    };
+    
+    document.getElementById('btn-move-down').onclick = () => {
+        currentTop += 15;
+        updateTransform();
+    };
+    
+    document.getElementById('btn-close-frame').onclick = () => {
+        document.body.style.transform = '';
+        document.body.style.transformOrigin = '';
+        document.body.style.padding = '';
+        document.body.style.background = '';
+        document.body.style.boxShadow = '';
+        document.body.style.borderRadius = '';
+        document.body.style.marginTop = '';
+        document.body.style.marginBottom = '';
+        document.body.style.width = '';
+        document.body.style.maxWidth = '';
+        document.body.style.marginLeft = '';
+        document.documentElement.style.background = '';
+        document.body.dataset.mobileFramed = "false";
+        
+        if(mainUi) document.body.appendChild(mainUi);
+        if(troyBtn) document.body.appendChild(troyBtn);
+        if(amBtn) document.body.appendChild(amBtn);
+        panel.remove();
+    };
+})();
