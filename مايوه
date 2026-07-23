@@ -1,0 +1,119 @@
+javascript:(function(){
+    let active = document.body.dataset.desktopMode === "true";
+    
+    if (active) {
+        let vp = document.querySelector('meta[name="viewport"]');
+        if(vp) vp.setAttribute('content', 'width=device-width, initial-scale=1.0');
+        
+        document.body.style.transform = '';
+        document.body.style.transformOrigin = '';
+        document.body.style.padding = '';
+        document.body.style.background = '';
+        document.body.style.boxShadow = '';
+        document.body.style.borderRadius = '';
+        document.body.style.marginTop = '';
+        document.body.style.width = '';
+        document.body.style.marginLeft = '';
+        document.documentElement.style.background = '';
+        
+        let panel = document.getElementById('troy-desktop-control-panel');
+        if(panel) panel.remove();
+        
+        document.body.dataset.desktopMode = "false";
+        return;
+    }
+    
+    document.body.dataset.desktopMode = "true";
+    
+    // 1. فرض وضع الكمبيوتر الحقيقي عبر الميتا تايت
+    let vp = document.querySelector('meta[name="viewport"]');
+    if(!vp) {
+        vp = document.createElement('meta');
+        vp.name = 'viewport';
+        document.head.appendChild(vp);
+    }
+    vp.setAttribute('content', 'width=1280, initial-scale=1.0');
+    
+    // 2. تنسيق خلفية المتصفح وشكل الشاشة الإطاري الفخم
+    document.documentElement.style.background = '#0b0b0f';
+    document.body.style.background = '#ffffff';
+    document.body.style.boxShadow = '0 40px 100px rgba(0,0,0,0.9)';
+    document.body.style.borderRadius = '20px';
+    document.body.style.overflow = 'hidden';
+    document.body.style.boxSizing = 'border-box';
+    
+    // القيم الابتدائية (حجم وسط وموقع نازل شوي)
+    let currentScale = 0.52;
+    let currentTop = 50;
+    
+    function updateTransform() {
+        document.body.style.transform = `scale(${currentScale})`;
+        document.body.style.transformOrigin = 'top center';
+        document.body.style.marginTop = `${currentTop}px`;
+        document.body.style.width = '1280px';
+        document.body.style.marginLeft = 'calc(50% - 640px)';
+    }
+    updateTransform();
+    
+    // 3. لوحة تحكم عائمة برا الإطار (في الخلفية الداكنة) عشان تتحكم براحتك
+    let controlPanel = document.createElement('div');
+    controlPanel.id = 'troy-desktop-control-panel';
+    controlPanel.style.cssText = 'position:fixed;bottom:15px;left:50%;transform:translateX(-50%);z-index:999999;background:rgba(20,20,30,0.9);backdrop-filter:blur(10px);border:1px solid rgba(0,255,204,0.4);padding:8px 14px;border-radius:30px;display:flex;gap:8px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,0.7);';
+    controlPanel.innerHTML = `
+        <span style="color:#00ffcc;font-size:11px;font-weight:bold;font-family:sans-serif;margin-left:2px;">🎛️ التحكم:</span>
+        <button id="btn-scale-down" style="background:#2c2c3e;color:#fff;border:none;width:30px;height:30px;border-radius:50%;font-weight:bold;cursor:pointer;font-size:14px;">-</button>
+        <span id="scale-val" style="color:#fff;font-size:11px;font-family:sans-serif;min-width:35px;text-align:center;">52%</span>
+        <button id="btn-scale-up" style="background:#2c2c3e;color:#fff;border:none;width:30px;height:30px;border-radius:50%;font-weight:bold;cursor:pointer;font-size:14px;">+</button>
+        <div style="width:1px;height:18px;background:rgba(255,255,255,0.2);margin:0 2px;"></div>
+        <button id="btn-move-up" style="background:#2c2c3e;color:#fff;border:none;width:30px;height:30px;border-radius:50%;font-weight:bold;cursor:pointer;font-size:12px;" title="رفع لفوق">⬆️</button>
+        <button id="btn-move-down" style="background:#2c2c3e;color:#fff;border:none;width:30px;height:30px;border-radius:50%;font-weight:bold;cursor:pointer;font-size:12px;" title="نزول لتحت">⬇️</button>
+        <div style="width:1px;height:18px;background:rgba(255,255,255,0.2);margin:0 2px;"></div>
+        <button id="btn-close-desktop" style="background:#e74c3c;color:#fff;border:none;padding:5px 10px;border-radius:12px;font-weight:bold;cursor:pointer;font-size:11px;font-family:sans-serif;">إلغاء</button>
+    `;
+    document.documentElement.appendChild(controlPanel);
+    
+    // ربط الأزرار بالوظائف الفورية
+    document.getElementById('btn-scale-up').onclick = () => {
+        if(currentScale < 0.95) {
+            currentScale = Math.round((currentScale + 0.03) * 100) / 100;
+            updateTransform();
+            document.getElementById('scale-val').innerText = Math.round(currentScale * 100) + '%';
+        }
+    };
+    
+    document.getElementById('btn-scale-down').onclick = () => {
+        if(currentScale > 0.3) {
+            currentScale = Math.round((currentScale - 0.03) * 100) / 100;
+            updateTransform();
+            document.getElementById('scale-val').innerText = Math.round(currentScale * 100) + '%';
+        }
+    };
+    
+    document.getElementById('btn-move-up').onclick = () => {
+        currentTop = Math.max(0, currentTop - 15);
+        updateTransform();
+    };
+    
+    document.getElementById('btn-move-down').onclick = () => {
+        currentTop += 15;
+        updateTransform();
+    };
+    
+    document.getElementById('btn-close-desktop').onclick = () => {
+        let vp = document.querySelector('meta[name="viewport"]');
+        if(vp) vp.setAttribute('content', 'width=device-width, initial-scale=1.0');
+        document.body.style.transform = '';
+        document.body.style.transformOrigin = '';
+        document.body.style.padding = '';
+        document.body.style.background = '';
+        document.body.style.boxShadow = '';
+        document.body.style.borderRadius = '';
+        document.body.style.marginTop = '';
+        document.body.style.width = '';
+        document.body.style.marginLeft = '';
+        document.documentElement.style.background = '';
+        let panel = document.getElementById('troy-desktop-control-panel');
+        if(panel) panel.remove();
+        document.body.dataset.desktopMode = "false";
+    };
+})();
