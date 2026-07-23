@@ -1,0 +1,32 @@
+javascript:(function(){
+    if(document.body.dataset.framed === "true") {
+        // إزالة التأثير وإرجاع الصفحة لطبيعتها
+        document.body.style.transform = '';
+        document.body.style.transformOrigin = '';
+        document.body.style.padding = '';
+        document.body.style.boxShadow = '';
+        document.body.style.background = '';
+        document.body.style.borderRadius = '';
+        document.body.style.marginTop = '';
+        document.body.style.marginBottom = '';
+        document.documentElement.style.background = '';
+        document.body.dataset.framed = "false";
+        return;
+    }
+    
+    document.body.dataset.framed = "true";
+    
+    // خلفية المتصفح الخارجية بلون هادئ عشان تبرز الإطار الأبيض
+    document.documentElement.style.background = '#13131a';
+    
+    // تصغير الصفحة وتوسيطها داخل مساحة بيضاء فخمة
+    document.body.style.transform = 'scale(0.82)';
+    document.body.style.transformOrigin = 'top center';
+    document.body.style.padding = '40px';
+    document.body.style.background = '#ffffff';
+    document.body.style.boxShadow = '0 25px 60px rgba(0,0,0,0.6)';
+    document.body.style.borderRadius = '16px';
+    document.body.style.boxSizing = 'border-box';
+    document.body.style.marginTop = '30px';
+    document.body.style.marginBottom = '50px';
+})();
